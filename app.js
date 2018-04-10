@@ -25,13 +25,23 @@ mongoose.connection.openUri('mongodb://localhost:27017/hospitalDB', (error, resp
 // Importar rutas
 var appRoutes = require('./routes/app'); // Importamos la ruta para la app principal (raíz)
 var usuarioRoutes = require('./routes/usuario'); // Importamos las rutas para el usuario
+var hospitalRoutes = require('./routes/hospital'); // Importamos las rutas para hospital
+var medicoRoutes = require('./routes/medico'); // Importamos las rutas para medico
+var buscarRoutes = require('./routes/buscar'); // Importamos las rutas para las búsquedas
+var uploadRoutes = require('./routes/upload'); // Importamos las rutas para las subidas de ficheros
+var imagenesRoutes = require('./routes/imagenes'); // Importamos las rutas para las imagenes
 var loginRoutes = require('./routes/login'); // Importamos las rutas para el login
 
 
 
 // Rutas
 app.use('/usuario', usuarioRoutes); // Usamos las rutas del usuario
+app.use('/hospital', hospitalRoutes); // Usamos las rutas del hospital
+app.use('/medico', medicoRoutes); // Usamos las rutas del medico
 app.use('/login', loginRoutes); // Usamos las rutas para el login
+app.use('/buscar', buscarRoutes); // Usamos las rutas de la búsqueda
+app.use('/upload', uploadRoutes); // Usamos las rutas para la subida de ficheros
+app.use('/imagen', imagenesRoutes); // Usamos las rutas para las imagenes
 app.use('/', appRoutes); // Usamos el appRoutes para la raíz (siempre va la última)
 
 
