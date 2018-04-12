@@ -12,7 +12,15 @@ var app = express();
 // Importamos el modelo de usuarios
 var Usuario = require('../models/usuario');
 
+// Imports de SignIn de Google:
+var CLIENT_ID = require('../config/config').CLIENT_ID; // Cogemos de nuestro fichero de configuraciones
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(CLIENT_ID);
 
+
+// ===============================================================================
+// Autenticación con login normal
+// ===============================================================================
 app.post('/', (request, response) => {
 
     var body = request.body; // Recogemos lo que nos llega por POST
@@ -52,7 +60,7 @@ app.post('/', (request, response) => {
             {usuario: usuarioDB}, // Payload
             SEED,
             { expiresIn: 14400} // Expira en 4 horas
-        )
+        );
 
         response.status(200).json({
             ok: true,
@@ -60,11 +68,131 @@ app.post('/', (request, response) => {
             id: usuarioDB._id,
             token: token
         });
-    });
-
-    
+    });    
 });
 
+// ===============================================================================
+// Autenticación con SignIn de Google. Más info en: https://developers.google.com/identity/sign-in/web/backend-auth
+// ===============================================================================
+
+// Función nueva para hacer peticiones asíncronas (parecido al Promise, de hecho devuelve una Promise)
+async function verify(token) {
+    const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: CLIENT_ID,  // Specify the CLIENT_ID of the app that accesses the backend
+        // Or, if multiple clients access the backend:
+        //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+    });
+    const payload = ticket.getPayload();
+    //const userid = payload['sub'];
+    // If request specified a G Suite domain:
+    //const domain = payload['hd'];
+
+    // Retornamos lo que nos interese del payload
+    return {
+        // payload: payload,
+        nombre: payload.name,
+        email: payload.email,
+        img: payload.picture,
+        google: true
+    }
+  }
+  
+
+// Tetición. Para que se ejecute el 'await' es necesario que en la petición usemos una función 'async'
+app.post('/google', async(request, response) => {
+
+    // Recogemos el token que nos viene en la petición
+    var token = request.body.token;
+
+    // Guardamos lo que retorne la función async 'verify' a la que le pasamos el token
+    var googleUser = await verify(token)
+            .catch( e => {
+                return response.status(403).json({
+                    ok: false,
+                    mensaje: { message: 'Token no válido' }
+                })
+            });
+
+    // Buscamos ese usuario en base de datos
+    Usuario.findOne({ email: googleUser.email }, (error, usuarioDB) => {
+
+        if(error){
+            return response.status(500).json({
+                ok: false,
+                mensaje: 'Error al buscar el usuario',
+                errors: error
+            });
+        }
+
+        // Comprobaremos si ese usuario se ha registrado por google
+        if(usuarioDB){
+
+            // Comprobamos si se ha registrado por Google
+            if(usuarioDB.google === false){ 
+                return response.status(400).json({
+                    ok: false,
+                    mensaje: 'Debe de usar su autenticación normal',
+                    errors: error
+                });
+            }else{
+                usuarioDB.password = ':)'; // Modificamos la contraseña
+
+                // Creamos el token usando la librería jsonwebtoken
+                var token = jwt.sign(
+                    {usuario: usuarioDB}, // Payload
+                    SEED,
+                    { expiresIn: 14400} // Expira en 4 horas
+                );
+
+                // Enviamos la respuesta con el usuario, el id y el token
+                response.status(200).json({
+                    ok: true,
+                    usuario: usuarioDB,
+                    id: usuarioDB._id,
+                    token: token,
+                    mensaje: 'Usuario encontrado en base de datos'
+                });
+            }
+        }else{
+            // El usuario no existe, hay que crearlo
+            var usuario = new Usuario();
+
+            // Seteamos los parámetros del usuario que nos vienen de Google
+            usuario.nombre = googleUser.nombre;
+            usuario.email = googleUser.email;
+            usuario.img = googleUser.img;
+            usuario.google = true;
+            usuario.password = ':)';
+
+            // Guardamos en base de datos
+            usuario.save((error, usuarioDB) => {
+                if(error){
+                    return response.status(500).json({
+                        ok: false,
+                        mensaje: 'Error al guardar el usuario',
+                        errors: error
+                    });
+                }
+                // Creamos el token usando la librería jsonwebtoken
+                var token = jwt.sign(
+                    {usuario: usuarioDB}, // Payload
+                    SEED,
+                    { expiresIn: 14400} // Expira en 4 horas
+                );
+
+                // Enviamos la respuesta con el usuario, el id y el token
+                response.status(200).json({
+                    ok: true,
+                    usuario: usuarioDB,
+                    id: usuarioDB._id,
+                    token: token,
+                    mensaje: 'Se ha creado el usuario con Google'
+                });
+            });
+        }
+    });
+});
 
 
 
