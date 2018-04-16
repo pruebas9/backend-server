@@ -88,9 +88,9 @@ app.get('/', (request, response, next) => {
 
 
 // ===============================================================================
-// Crear un nuevo usuario
+// Crear un nuevo usuario (No necesitamos el token para crear usuario)
 // ===============================================================================
-app.post('/', mdAuthentication.verificaToken, (request, response, next) => {
+app.post('/', (request, response, next) => {
 
     var body = request.body; // Recogemos lo que viene por POST
 
