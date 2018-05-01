@@ -32,3 +32,25 @@ exports.verificaToken = function( request, response, next){
 
     //TODO: Pasar el token por el header y no por la url...
 }
+
+// ===============================================================================
+// MIDDLEWARE. Verificar si el usuario tiene permiso para actualizar un usuarios
+// ===============================================================================
+exports.verificaADMIN_ROLE = function( request, response, next){
+
+    var usuario = request.usuario;  // Obtenemos las propiedades del objeto usuario
+
+    if (usuario.role === 'ADMIN_ROLE') {
+        next(); // Salimos de la función
+        return;
+    } else {
+
+        return response.status(401).json({
+            ok: false,
+            mensaje: 'Unauthorized. No tiene un role con privilegios para esta acción',
+            errors: { message: 'No tiene autorización para esta acción' },              
+        });
+    }
+
+
+}

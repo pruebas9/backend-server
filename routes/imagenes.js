@@ -2,10 +2,14 @@
 
 // Hacemos el import de express
 var express = require('express');
-var fs = require('fs'); // Importo el FileSistem
 
 // Guardamos express en variable
 var app = express();
+
+const path = require('path'); // Para construir el path
+const fs = require('fs'); // Importo el FileSistem
+
+
 
 
 
@@ -19,19 +23,16 @@ app.get('/:tipo_archivo/:imagen', (request, response, next) => {
     var imagen = request.params.imagen;
 
     // Creamos una variable con el path
-    var path = `./uploads/${ tipo_archivo}/${ imagen }`; // Construimos el path
+    var pathImagen = path.resolve(__dirname, `../uploads/${ tipo_archivo}/${ imagen }`); // Construimos el path
 
-    // Usamos el FileSistem para comprobar si el fichero existe en el path
-    fs.exists(path, existe => {
+    // Si la imagen existe...
+    if(fs.existsSync(pathImagen)){
+        response.sendFile(pathImagen);
+    } else {
+        var pathNoImagen = path.resolve(__dirname, '../assets/img/no-img.jpg'); // Construimos el path de la imagen por defecto
+        response.sendFile(pathNoImagen);
+    }
 
-        // Si no existe... le damos una imagen por defecto
-        if(!existe){
-            path = './assets/img/no-img.jpg';
-        }
-
-        // Enviamos una repuesta pero en lugar de un json enviamos un fichero (imagen)
-        response.sendfile(path);
-    });
 });
 
 

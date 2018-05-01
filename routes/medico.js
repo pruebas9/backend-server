@@ -53,12 +53,50 @@ app.get('/', (request, response, next) => {
                         }); 
                     }
                         
-                    response.status(201).json({
+                    response.status(200).json({
                         ok: true,
                         medicos: medicos,
                         total: totalMedicos
                     })                  
                 });
+            });
+});
+
+
+// ===============================================================================
+// Obtener un sólo médico
+// ===============================================================================
+app.get('/:id', (request, response, next) => {
+
+    var id = request.params.id; // Recogemos los datos que vienen por la url
+
+    Medico.findById( id )
+        .populate('usuario', 'nombre email img')
+        .populate('hospital')
+        .exec(
+            (error, medico) => {
+            
+                if(error) {
+                    return response.status(500).json({
+                        ok: false,
+                        mensaje: 'Error al buscar el médico',
+                        errors: error,              
+                    });            
+                }
+
+                if(!medico) {
+                    return response.status(404).json({
+                        ok: false,
+                        mensaje: 'No se encuentra un médico con id ' + id,
+                        errors: error,              
+                    });  
+                }
+
+                response.status(200).json({
+                    ok: true,
+                    medico: medico,
+                })
+
             });
 });
 

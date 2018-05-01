@@ -5,7 +5,8 @@ var express = require('express');
 var bcrypt = require('bcryptjs'); // Para trabajar con encriptación passwords (https://github.com/dcodeIO/bcrypt.js/)
 var jwt = require('jsonwebtoken'); // Para generar token (https://github.com/auth0/node-jsonwebtoken)
 //var SEED = require('../config/config').SEED; // La semilla para el token que está en el fichero config.js
-var mdAuthentication = require('../middlewares/autenticacion');
+
+var mdAuthentication = require('../middlewares/autenticacion');    // Middleware para la seguridad, JWT y ROLES
 
 
 // Guardamos en variable
@@ -28,7 +29,7 @@ app.get('/', (request, response, next) => {
 
     // Consulta con el select personalizado (devolver ciertos campos sólo)
     // Con skip() saltamos los registros que nos vengan en desde
-    Usuario.find({}, 'nombre email img role')
+    Usuario.find({}, 'nombre email img role google')
         .skip(desde)
         .limit(5)
         .exec(
@@ -130,7 +131,7 @@ app.post('/', (request, response, next) => {
 // ===============================================================================
 // Actualizar un usuario 
 // ===============================================================================
-app.put('/:id', mdAuthentication.verificaToken, (request, response) => {
+app.put('/:id', [ mdAuthentication.verificaToken, mdAuthentication.verificaADMIN_ROLE ], (request, response) => {
 
     var id = request.params.id; // Recogemos el id que nos viene en la url
 
@@ -183,7 +184,7 @@ app.put('/:id', mdAuthentication.verificaToken, (request, response) => {
 // ===============================================================================
 // Borrar un usuario 
 // ===============================================================================
-app.delete('/:id', mdAuthentication.verificaToken, (request, response) => {
+app.delete('/:id', [ mdAuthentication.verificaToken, mdAuthentication.verificaADMIN_ROLE ], (request, response) => {
 
     var id = request.params.id; // Recogemos el ID que nos llega por la url
 

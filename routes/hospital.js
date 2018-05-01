@@ -7,8 +7,9 @@ var mdAuthentication = require('../middlewares/autenticacion');
 // Guardamos en variable
 var app = express();
 
-// Importamos el model de hosoital
+// Importamos el model de hospital y usuario
 var Hospital = require('../models/hospital');
+var Usuario = require('../models/usuario');
 
 
 // MÉTODOS PARA EL CRUD DEL HOSPITAL
@@ -186,6 +187,41 @@ app.delete('/:id', mdAuthentication.verificaToken, (request, response) => {
         response.status(200).json({
             ok: true,
             hospital: hospitalBorrado
+        })
+    });
+});
+
+
+// ===============================================================================
+// Buscar un hospital 
+// ===============================================================================
+app.get('/:id', (request, response) => {
+
+    var id = request.params.id; // Recogemos el ID que nos llega por la url
+
+    Hospital.findById(id)
+                .populate('usuario', 'nombre img email')
+                .exec((error, hospitalEncontrado) => {
+
+        if(error) {
+            return response.status(500).json({
+                ok: false,
+                mensaje: 'Error al buscar el hospital',
+                errors: error,              
+            });            
+        }
+
+        if(!hospitalEncontrado){
+            return response.status(404).json({
+                ok: false,
+                mensaje: 'No existe un hospital con el id ' + id,
+                errors: { message: 'No existe un hospital con ese id'}
+            });
+        }
+
+        response.status(200).json({
+            ok: true,
+            hospital: hospitalEncontrado
         })
     });
 });
