@@ -131,7 +131,7 @@ app.post('/', (request, response, next) => {
 // ===============================================================================
 // Actualizar un usuario 
 // ===============================================================================
-app.put('/:id', [ mdAuthentication.verificaToken, mdAuthentication.verificaADMIN_ROLE ], (request, response) => {
+app.put('/:id', [ mdAuthentication.verificaToken, mdAuthentication.verificaADMIN_o_MismoUsuario ], (request, response) => {
 
     var id = request.params.id; // Recogemos el id que nos viene en la url
 
@@ -184,7 +184,7 @@ app.put('/:id', [ mdAuthentication.verificaToken, mdAuthentication.verificaADMIN
 // ===============================================================================
 // Borrar un usuario 
 // ===============================================================================
-app.delete('/:id', [ mdAuthentication.verificaToken, mdAuthentication.verificaADMIN_ROLE ], (request, response) => {
+app.delete('/:id', [ mdAuthentication.verificaToken, mdAuthentication.verificaADMIN_o_MismoUsuario ], (request, response) => {
 
     var id = request.params.id; // Recogemos el ID que nos llega por la url
 

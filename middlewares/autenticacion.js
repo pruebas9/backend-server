@@ -35,6 +35,7 @@ exports.verificaToken = function( request, response, next){
 
 // ===============================================================================
 // MIDDLEWARE. Verificar si el usuario tiene permiso para actualizar un usuarios
+// Se usará la de abajo por ser más completa. Esta no permite modificar datos de uno mismo
 // ===============================================================================
 exports.verificaADMIN_ROLE = function( request, response, next){
 
@@ -52,5 +53,28 @@ exports.verificaADMIN_ROLE = function( request, response, next){
         });
     }
 
+}
+
+// ===============================================================================
+// MIDDLEWARE. Verificar ADMIN ó mismo usuario (un usuario puede actualizarse a sí mismo)
+// Es la misma función que la de arriba pero más completa. Usaremos esta
+// ===============================================================================
+exports.verificaADMIN_o_MismoUsuario = function( request, response, next){
+
+    var usuario = request.usuario;  // Obtenemos las propiedades del objeto usuario
+    var id = request.params.id;     // Recojo el Id del usuario de los parámetros (nos tienen que venir)
+
+    // Comprobamos role ó si el id del usuario que hay en el token es el mismo que tenemos en los parámetros
+    if (usuario.role === 'ADMIN_ROLE' || usuario._id === id) {
+        next(); // Salimos de la función
+        return;
+    } else {
+
+        return response.status(401).json({
+            ok: false,
+            mensaje: 'Unauthorized. No tiene privilegios para esta acción',
+            errors: { message: 'No tiene autorización para esta acción' },              
+        });
+    }
 
 }
